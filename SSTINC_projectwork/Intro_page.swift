@@ -9,10 +9,20 @@ import SwiftUI
 
 struct Intro_page: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ZStack{
+            Color.black
+                .ignoresSafeArea()
+            VStack {
+                Text("Welcome to Inctropalis")
+                    .font(.largeTitle)
+                    .foregroundStyle(.green)
+                    .font(.custom("american typewriter", size: 50))
+                    
+            
+            }
+        }
     }
 }
-
 #Preview {
     Intro_page()
 }
