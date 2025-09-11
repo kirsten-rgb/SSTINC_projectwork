@@ -52,11 +52,11 @@ struct ContentView: View {
                     
                     NavigationLink {
                         
-                        whereHeist()
+                        Intro_page()
                         
                     } label: {
                         
-                        Text("💀 Click Here 💀")
+                        Text("Click for instructions")
                         
                             .font(.title)
                         
