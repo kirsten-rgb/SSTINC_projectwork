@@ -170,11 +170,7 @@ struct SuspectListView: View {
                         .frame(height: 150)
                         .padding(.horizontal)
                     }
-                    Button{
-                        
-                    }label: {
-                        Text("Gather all clues")
-                    }
+                    
                     
                     if gameState.allInterrogated() && !gameState.showSolveButton {
                         Button("Solve the Mystery?") {
