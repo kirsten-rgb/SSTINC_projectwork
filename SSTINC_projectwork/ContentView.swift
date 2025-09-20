@@ -42,13 +42,13 @@ class GameState: ObservableObject {
         case "Joshua":
             return "(Joshua) I was downstairs chiling in the lobby eating some snacks."
         case "Kesler":
-            return "(Kesler) I was on my way back to the hotel from buying groceries"
+            return "(Kesler) I was on my way back to the hotel from buying groceries "
         case "Elon Musk":
             return "(Elon Musk) I was on my way to the bank to pay a bet I lost to Taylor."
         case "Bill Gates":
             return "(Bill Gates) I was getting coffee to focus on sleeping."
         case "Taylor Swift":
-            return "(Taylor Swift) I was outside on a late-night walk while waiting for Elon to get me my money. My bodyguards were with me, I’m innocent!"
+            return "(Taylor Swift)  I was outside on a late-night walk while waiting for Elon to get me my money. My bodyguards were with me, I’m innocent!"
         default:
             return "(Unknown) No clue."
         }
@@ -58,17 +58,17 @@ class GameState: ObservableObject {
     func foundClueFor(suspect: String) -> String {
         switch suspect {
         case "Obama":
-            return "(Obama) While I was going back to my hotel from the bank, I saw Taylor suspiciously staring at a black limousine.."
-        case "Joshua":
-            return "(Joshua) When I went to throw my wrappers away, I noticed gloves in the trash bin of the hotel, and some distant humming of a familiar patriotic tune. The thief had probably just left the scene inside the hotel. 😦"
-        case "Kesler":
-            return "(Kesler) While I was on my way back to the hotel I saw a figure lurking about, maybe after a break-up? I heard something about bad blood. 😐"
-        case "Elon Musk":
-            return "(Elon Musk) Saw someone passing me by in the hallway while I was on my way to the bank. Then further into the bank I saw dropped black sunglasses near the vault. Wonder why."
-        case "Bill Gates":
-            return "(Bill Gates) I was getting coffee to focus on sleeping when I saw Obama passing by, and when I went to return to my room I saw Joshua staring into the trash. 😥"
-        case "Taylor Swift":
-            return "(Taylor Swift) I was outside on a late-night walk. Didn't see anything other than some weird black limousine waiting outside. Maybe it was a get-away car? Didn't seem to work though, maybe the suspect was being watched."
+            return "(Obama) I was counting cash in my hotel room, listening to the sweet sounds and music of America. I couldn't hear anything from the outside at all."
+                    case "Joshua":
+                        return "(Joshua) I noticed gloves in the trash bin of the hotel, and some distant humming of a familiar patriotic tune. The thief had probably just left the scene inside the hotel. 😦"
+                    case "Kesler":
+                        return "(Kesler)  I was on my way back to the hotel from buying groceries and saw a figure lurking about, maybe after a break-up? I heard something about bad blood. 😐"
+                    case "Elon Musk":
+                        return "(Elon Musk) Saw someone passing me by in the hallway while I was on my way to the bank. They were humming something… could’ve been a song from the radio? It reminded me of a national tune."
+                    case "Bill Gates":
+                        return "(Bill Gates) I was getting coffee to focus on sleeping when I saw Obama passing by, and when I went further into the hotel I saw Joshua staring into the trash. 😥"
+                    case "Taylor Swift":
+                        return "(Taylor Swift) I was outside on a late-night walk. Saw Kesler passing me by back to the hotel with some grocery bags some weird black limousine waiting outside. Maybe it was a get-away car? Didn't seem to work though, maybe the suspect was being watched."
         default:
             return "(Unknown) No clue."
         }
@@ -165,21 +165,25 @@ struct SuspectListView: View {
             ScrollView {
                 VStack(spacing: 15) {
                     ForEach(gameState.suspects.keys.sorted(), id: \.self) { suspect in
+                        let emoji = gameState.suspects[suspect] ?? "❓"
                         HStack {
-                            Text(suspect)
+                            Text("\(emoji) \(suspect)")
                                 .font(.headline)
                                 .foregroundColor(.white)
                             Spacer()
                             
-                            Button("Ask for Clues") {
+                            Button("Ask for Clues"){
                                 gameState.currentStage = .clueSharing(suspect)
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.blue)
                             .disabled(gameState.gatheredClues.contains(suspect))
                             
-                            Button("Interrogate") {
+                            Button {
                                 gameState.currentStage = .interrogation(suspect)
+                            } label: {
+                                Text("Interrogate")
+                                    + Text(gameState.gatheredClues.contains(suspect) ? "Checked✅" : "Unchecked🔒")
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.purple)
@@ -216,9 +220,7 @@ struct SuspectListView: View {
                         .tint(.orange)
                     }
                     
-                    if gameState.showSolveButton && !gameState.showGatherButton {
-                        Button("Gather Everyone Together") {
-                            gameState.showGatherButton = true
+                    Button("Gather Everyone") {
                             gameState.currentStage = .gather
                         }
                         .buttonStyle(.borderedProminent)
@@ -227,9 +229,8 @@ struct SuspectListView: View {
                 }
             }
         }
-        .padding()
     }
-}
+
 
 // MARK: - ClueSharingView
 struct ClueSharingView: View {
@@ -246,7 +247,7 @@ struct ClueSharingView: View {
                 Text(gameState.suspects[suspect] ?? "❓")
                     .font(.system(size: 80))
                 
-                Text("\(suspect) - Sharing Clues")
+                Text("\(gameState.suspects[suspect] ?? "❓") \(suspect) - Sharing Clues")
                     .font(.title2)
                     .bold()
                     .foregroundColor(.white)
@@ -264,6 +265,12 @@ struct ClueSharingView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.orange)
+                    Button("Gather Everyone") {
+                        gameState.currentStage = .gather
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    
                 } else {
                     Button("Did you notice anything?") {
                         clueShown = true
@@ -303,7 +310,7 @@ struct InterrogationView: View {
                         }
                     }
                 
-                Text("Interrogating \(suspect)")
+                Text("Interrogating \(gameState.suspects[suspect] ?? "❓") \(suspect)")
                     .font(.title2)
                     .bold()
                     .foregroundColor(.white)
@@ -360,7 +367,8 @@ struct GatherView: View {
                 .foregroundColor(.white)
             
             ForEach(gameState.suspects.keys.sorted(), id: \.self) { suspect in
-                Button(suspect) {
+                let emoji = gameState.suspects[suspect] ?? "❓"
+                Button("\(emoji) \(suspect)") {
                     gameState.finalMessage = suspect
                     gameState.currentStage = .final
                 }
@@ -379,14 +387,15 @@ struct FinalRevealView: View {
     var body: some View {
         VStack(spacing: 20) {
             if let chosen = gameState.finalMessage {
+                let emoji = gameState.suspects[chosen] ?? "❓"
                 if chosen == "Obama" {
-                    Text("🎉 Well done! The police capture Obama. Incoin is saved!")
+                    Text("🎉 Well done! The police capture \(emoji) \(chosen). Incoin is saved!")
                         .multilineTextAlignment(.center)
                         .padding()
                         .foregroundColor(.green)
                         .bold()
                 } else {
-                    Text("❌ Oh no! That's wrong! \(chosen) has been wrongly accused and is now loathing you from their prison cell as the real culprit roams free!")
+                    Text("❌ Oh no! That's wrong! \(emoji) \(chosen) has been wrongly accused and is now loathing you from their prison cell as the real culprit roams free!")
                         .multilineTextAlignment(.center)
                         .padding()
                         .foregroundColor(.red)
