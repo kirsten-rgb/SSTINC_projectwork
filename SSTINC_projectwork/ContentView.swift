@@ -268,11 +268,18 @@ struct InterrogationView: View {
                     .frame(height: 150)
                     .padding(.horizontal)
                 }
+                Button("Gather Everyone") {
+                        gameState.currentStage = .gather
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                }
+                }
             }
-            .padding()
+
         }
-    }
-}
+    
+
 struct GatherView: View {
     @ObservedObject var gameState: GameState
     
