@@ -35,17 +35,17 @@ class GameState: ObservableObject {
     func clueFor(suspect: String) -> String {
         switch suspect {
         case "Obama":
-            return "(Obama) I have no clue what your talking about… 🎵 *humming the American National Anthem*"
+            return "(Obama) I was counting cash in my hotel room, listening to music. I couldn't hear anything from the outside at all."
         case "Joshua":
-            return "(Joshua) I noticed someone running past the hallway late last night. They were humming a familiar patriotic tune."
+            return "(Joshua) I noticed gloves in the trash bin of the hotel, and some distant humming of a familiar patriotic tune. The thief had probably just left the scene inside the hotel. 😦"
         case "Kesler":
-            return "(Kesler) Heard heavy footsteps and a little tune… sounded oddly like the national anthem."
+            return "(Kesler)  I was on my way back to the hotel from buying groceries and saw a figure lurking about, maybe after a break-up? I heard something about bad blood. 😐"
         case "Elon Musk":
-            return "(Elon Musk) Saw someone leave quickly while humming something… could’ve been a song from the radio? It reminded me of a national tune."
+            return "(Elon Musk) Saw someone passing me by in the hallway while I was on my way to the bank. They were humming something… could’ve been a song from the radio? It reminded me of a national tune."
         case "Bill Gates":
-            return "(Bill Gates) I saw shadows moving fast. There was humming… almost sounded like the American anthem."
+            return "(Bill Gates) I was getting coffee to focus on sleeping when I saw Obama passing by, and when I went further into the hotel I saw Joshua staring into the trash. 😥"
         case "Taylor Swift":
-            return "(Taylor Swift) I heard footsteps running away and humming a patriotic song… I think it was the national anthem."
+            return "(Taylor Swift)  I was outside on a late-night walk. My bodyguards were with me, I’m innocent!"
         default:
             return "(Unknown) No clue."
         }
