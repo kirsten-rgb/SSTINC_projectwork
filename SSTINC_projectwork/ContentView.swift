@@ -7,10 +7,12 @@
 
 import SwiftUI
 
+// MARK: - GameState
 class GameState: ObservableObject {
     @Published var currentStage: Stage = .start
     @Published var clues: [String] = []
     @Published var interrogated: Set<String> = []
+    @Published var gatheredClues: Set<String> = [] // suspects whose clues have been gathered
     @Published var showSolveButton: Bool = false
     @Published var showGatherButton: Bool = false
     @Published var finalMessage: String? = nil
@@ -18,6 +20,7 @@ class GameState: ObservableObject {
     enum Stage {
         case start
         case suspects
+        case clueSharing(String)   // <-- new stage
         case interrogation(String)
         case gather
         case final
@@ -35,17 +38,37 @@ class GameState: ObservableObject {
     func clueFor(suspect: String) -> String {
         switch suspect {
         case "Obama":
-            return "(Obama) I was counting cash in my hotel room, listening to music. I couldn't hear anything from the outside at all."
+            return "(Obama) I was counting cash in my hotel room, listening to the sweet sounds and music of America. I couldn't hear anything from the outside at all."
         case "Joshua":
-            return "(Joshua) I noticed gloves in the trash bin of the hotel, and some distant humming of a familiar patriotic tune. The thief had probably just left the scene inside the hotel. 😦"
+            return "(Joshua) I was downstairs chiling in the lobby eating some snacks."
         case "Kesler":
-            return "(Kesler)  I was on my way back to the hotel from buying groceries and saw a figure lurking about, maybe after a break-up? I heard something about bad blood. 😐"
+            return "(Kesler) I was on my way back to the hotel from buying groceries"
         case "Elon Musk":
-            return "(Elon Musk) Saw someone passing me by in the hallway while I was on my way to the bank. They were humming something… could’ve been a song from the radio? It reminded me of a national tune."
+            return "(Elon Musk) I was on my way to the bank to pay a bet I lost to Taylor."
         case "Bill Gates":
-            return "(Bill Gates) I was getting coffee to focus on sleeping when I saw Obama passing by, and when I went further into the hotel I saw Joshua staring into the trash. 😥"
+            return "(Bill Gates) I was getting coffee to focus on sleeping."
         case "Taylor Swift":
-            return "(Taylor Swift)  I was outside on a late-night walk. My bodyguards were with me, I’m innocent!"
+            return "(Taylor Swift) I was outside on a late-night walk while waiting for Elon to get me my money. My bodyguards were with me, I’m innocent!"
+        default:
+            return "(Unknown) No clue."
+        }
+    }
+    
+    // NEW: separate "clue each suspect found"
+    func foundClueFor(suspect: String) -> String {
+        switch suspect {
+        case "Obama":
+            return "(Obama) While I was going back to my hotel from the bank, I saw Taylor suspiciously staring at a black limousine.."
+        case "Joshua":
+            return "(Joshua) When I went to throw my wrappers away, I noticed gloves in the trash bin of the hotel, and some distant humming of a familiar patriotic tune. The thief had probably just left the scene inside the hotel. 😦"
+        case "Kesler":
+            return "(Kesler) While I was on my way back to the hotel I saw a figure lurking about, maybe after a break-up? I heard something about bad blood. 😐"
+        case "Elon Musk":
+            return "(Elon Musk) Saw someone passing me by in the hallway while I was on my way to the bank. Then further into the bank I saw dropped black sunglasses near the vault. Wonder why."
+        case "Bill Gates":
+            return "(Bill Gates) I was getting coffee to focus on sleeping when I saw Obama passing by, and when I went to return to my room I saw Joshua staring into the trash. 😥"
+        case "Taylor Swift":
+            return "(Taylor Swift) I was outside on a late-night walk. Didn't see anything other than some weird black limousine waiting outside. Maybe it was a get-away car? Didn't seem to work though, maybe the suspect was being watched."
         default:
             return "(Unknown) No clue."
         }
@@ -82,6 +105,8 @@ struct ContentView: View {
                 StartView(gameState: gameState)
             case .suspects:
                 SuspectListView(gameState: gameState)
+            case .clueSharing(let suspect):
+                ClueSharingView(gameState: gameState, suspect: suspect)
             case .interrogation(let suspect):
                 InterrogationView(gameState: gameState, suspect: suspect)
             case .gather:
@@ -92,6 +117,8 @@ struct ContentView: View {
         }
     }
 }
+
+// MARK: - StartView
 struct StartView: View {
     @ObservedObject var gameState: GameState
     
@@ -104,7 +131,7 @@ struct StartView: View {
                 .bold()
                 .foregroundColor(.white)
             
-            Text("The world’s first digital currency, Incoin, has been stolen overnight. Your mission: interrogate all suspects, gather clues, and figure out who the culprit is before they escape!")
+            Text("The world’s first digital currency, Incoin, has been stolen overnight. Your mission: ask suspects for clues, interrogate them, gather all evidence, and reveal the culprit before they escape!")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.white.opacity(0.9))
                 .padding()
@@ -123,6 +150,8 @@ struct StartView: View {
         .padding()
     }
 }
+
+// MARK: - SuspectListView
 struct SuspectListView: View {
     @ObservedObject var gameState: GameState
     
@@ -141,12 +170,20 @@ struct SuspectListView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             Spacer()
+                            
+                            Button("Ask for Clues") {
+                                gameState.currentStage = .clueSharing(suspect)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.blue)
+                            .disabled(gameState.gatheredClues.contains(suspect))
+                            
                             Button("Interrogate") {
                                 gameState.currentStage = .interrogation(suspect)
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.blue)
-                            .disabled(gameState.interrogated.contains(suspect))
+                            .tint(.purple)
+                            .disabled(!gameState.gatheredClues.contains(suspect) || gameState.interrogated.contains(suspect))
                         }
                         .padding()
                         .background(RoundedRectangle(cornerRadius: 12).fill(Color.gray.opacity(0.3)))
@@ -171,7 +208,6 @@ struct SuspectListView: View {
                         .padding(.horizontal)
                     }
                     
-                    
                     if gameState.allInterrogated() && !gameState.showSolveButton {
                         Button("Solve the Mystery?") {
                             gameState.showSolveButton = true
@@ -195,6 +231,54 @@ struct SuspectListView: View {
     }
 }
 
+// MARK: - ClueSharingView
+struct ClueSharingView: View {
+    @ObservedObject var gameState: GameState
+    var suspect: String
+    @State private var clueShown = false
+    
+    var body: some View {
+        ZStack {
+            gameState.backgroundColor(for: suspect)
+                .edgesIgnoringSafeArea(.all)
+            
+            VStack(spacing: 20) {
+                Text(gameState.suspects[suspect] ?? "❓")
+                    .font(.system(size: 80))
+                
+                Text("\(suspect) - Sharing Clues")
+                    .font(.title2)
+                    .bold()
+                    .foregroundColor(.white)
+                
+                if clueShown {
+                    Text(gameState.foundClueFor(suspect: suspect))
+                        .multilineTextAlignment(.center)
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.6)))
+                        .foregroundColor(.white)
+                    
+                    Button("Proceed to Interrogation") {
+                        gameState.gatheredClues.insert(suspect)
+                        gameState.currentStage = .interrogation(suspect)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                } else {
+                    Button("Did you notice anything?") {
+                        clueShown = true
+                        gameState.clues.append(gameState.foundClueFor(suspect: suspect))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - InterrogationView
 struct InterrogationView: View {
     @ObservedObject var gameState: GameState
     var suspect: String
@@ -253,33 +337,13 @@ struct InterrogationView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(.blue)
                 }
-                
-                if !gameState.clues.isEmpty {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 5) {
-                            ForEach(gameState.clues, id: \.self) { clue in
-                                Text("• \(clue)")
-                                    .foregroundColor(.white)
-                                    .padding(5)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.5)))
-                            }
-                        }
-                    }
-                    .frame(height: 150)
-                    .padding(.horizontal)
-                }
-                Button("Gather Everyone") {
-                        gameState.currentStage = .gather
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.orange)
-                }
-                }
             }
-
+            .padding()
         }
-    
+    }
+}
 
+// MARK: - GatherView
 struct GatherView: View {
     @ObservedObject var gameState: GameState
     
@@ -307,6 +371,8 @@ struct GatherView: View {
         .padding()
     }
 }
+
+// MARK: - FinalRevealView
 struct FinalRevealView: View {
     @ObservedObject var gameState: GameState
     
@@ -332,6 +398,7 @@ struct FinalRevealView: View {
                 gameState.currentStage = .start
                 gameState.clues.removeAll()
                 gameState.interrogated.removeAll()
+                gameState.gatheredClues.removeAll()
                 gameState.finalMessage = nil
                 gameState.showSolveButton = false
                 gameState.showGatherButton = false
@@ -346,4 +413,3 @@ struct FinalRevealView: View {
 #Preview {
     ContentView()
 }
-
